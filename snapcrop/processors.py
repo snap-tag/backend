@@ -57,6 +57,7 @@ class EdgeDetector:
 
     def __call__(self, image, thresh1 = 50, thresh2 = 150, apertureSize = 3):
         edges = cv2.Canny(image, thresh1, thresh2, apertureSize = apertureSize)
+        edges = cv2.dilate(edges,kernel=cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3,3)))
         if self.output_process: cv2.imwrite('output/edges.jpg', edges)
         return edges
 
@@ -92,11 +93,11 @@ class RotationCorrector:
         
 class Resizer:
     def __init__(self, height = 1280, output_process = False):
-        self.height = height
+        self._height = height
         self.output_process = output_process
     
     def __call__(self, image):
-        if image.shape[0] <= self.height: return image
+        if image.shape[0] <= self._height: return image
         ratio = round(self._height / image.shape[0], 3)
         width = int(image.shape[1]*ratio)
         dim = (width, self._height)
@@ -116,3 +117,25 @@ class OtsuThresholder:
         T_, thresholded = cv2.threshold(image, self.thresh1, self.thresh2, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
         if self.output_process: cv2.imwrite('output/thresholded.jpg', thresholded)
         return thresholded
+
+class FastDenoiser:
+    """Denoises image by using the fastNlMeansDenoising method
+
+    Params
+    ------
+    image       is the image to be Thresholded
+    strength    the amount of denoising to apply
+
+    Returns
+    -------
+    Denoised image
+    """
+    def __init__(self, strength = 7, output_process = False):
+        self._strength = strength
+        self.output_process = output_process
+
+
+    def __call__(self, image):
+        temp = cv2.fastNlMeansDenoising(image, h = self._strength)
+        if self.output_process: cv2.imwrite('output/denoised.jpg', temp)
+        return temp
