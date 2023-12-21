@@ -3,7 +3,7 @@ import math
 from scipy import ndimage
 import numpy as np
 
-class RotaionCorrector:
+class RotationCorrector:
     def __init__(self, output_process = False):
         self.output_process = output_process
     
