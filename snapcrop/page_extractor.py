@@ -15,10 +15,10 @@ class PageExtractor:
         self.output_process = output_process
 
 
-    def __call__(self, image_path):
+    def __call__(self, img):
         # Step 1: Read image from file
-        self._image = cv2.imread(image_path)
-
+        self._image = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
+        
         # Step 2: Preprocess image
         self._processed = self._image
         for preprocessor in self._preprocessors:
