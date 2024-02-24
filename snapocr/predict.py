@@ -63,9 +63,10 @@ def recognize(image):
             for characters in words:
                 character = Image.fromarray(characters)
                 recognized_character = _predict_image(model,character)
-                char_list.append(recognized_character["predicted_class"])
+                if recognized_character["confidence"] > 85 and " " not in recognized_character["predicted_class"]:
+                    char_list.append(recognized_character["predicted_class"])
             word_list.append("".join(char_list))
-        text_list.append(" ".join(word_list))
+        text_list.append("".join(word_list))
  
     # return predicted_output
     return text_list
