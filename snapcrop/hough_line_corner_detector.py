@@ -14,10 +14,9 @@ class HoughLineCornerDetector:
         self.thresh = thresh
         self.output_process = output_process
         self._preprocessor = [
-            Closer(output_process = output_process), 
+            Closer(output_process = output_process),
             EdgeDetector(output_process = output_process)
         ]
-
     
     def __call__(self, image):
         # Step 1: Process for edge detection
@@ -96,16 +95,17 @@ class HoughLineCornerDetector:
     def _find_quadrilaterals(self):
         X = np.array([[point[0][0], point[0][1]] for point in self._intersections])
         kmeans = KMeans(
-            n_clusters = 4, 
-            init = 'k-means++', 
-            max_iter = 100, 
-            n_init = 10, 
+            n_clusters = 4,
+            init = 'k-means++',
+            max_iter = 100,
+            n_init = 10,
             random_state = 0
         ).fit(X)
 
         if self.output_process: self._draw_quadrilaterals(self._lines, kmeans)
 
-        return  [[center.tolist()] for center in kmeans.cluster_centers_]
+        centers = [[center.tolist()] for center in kmeans.cluster_centers_]
+        return  centers
 
 
     def _draw_quadrilaterals(self, lines, kmeans):
@@ -122,10 +122,10 @@ class HoughLineCornerDetector:
             y2 = int(y0 - n * (a))
 
             cv2.line(
-                grouped_output, 
-                (x1, y1), 
-                (x2, y2), 
-                (0, 0, 255), 
+                grouped_output,
+                (x1, y1),
+                (x2, y2),
+                (0, 0, 255),
                 2
             )
         

@@ -1,3 +1,5 @@
+import io
+import base64
 from fastapi import FastAPI, UploadFile
 from PIL import Image
 from snapcrop.hough_line_corner_detector import HoughLineCornerDetector
@@ -5,10 +7,6 @@ from snapcrop.page_extractor import PageExtractor
 from snapcrop.processors import FastDenoiser, OtsuThresholder, Resizer
 from snapner.ner import generate_tags
 from snapocr.predict import recognize
-import io
-import base64
-import cv2
-
 
 
 app = FastAPI()

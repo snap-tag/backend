@@ -1,5 +1,7 @@
 from torchvision import transforms
 import torch
+
+from snapocr.segmentation import segment_text
 from .model import CNNModel
 from PIL import Image
 
@@ -35,8 +37,6 @@ def _predict_image(model, image):
     predicted_class_idx = torch.argmax(predictions[0]).item()
     confidence = 100 * torch.max(predictions[0]).item()
     
-    print(predicted_class_idx)
-
     # Return the result
     result = {
         "predicted_class": character_classes[int(classes[int(predicted_class_idx)])],
@@ -54,10 +54,21 @@ def recognize(image):
     model.load_state_dict(torch.load("snapocr/model.pth",map_location=torch.device("mps")))
     model.eval()
 
-    image = Image.fromarray(image.copy())
-    predicted_output = _predict_image(model,image)
+    text_list = []
+    segmented_image_list = segment_text(image)
+    for lines in segmented_image_list:
+        word_list = []
+        for words in lines:
+            char_list = []
+            for characters in words:
+                character = Image.fromarray(characters)
+                recognized_character = _predict_image(model,character)
+                char_list.append(recognized_character["predicted_class"])
+            word_list.append("".join(char_list))
+        text_list.append(" ".join(word_list))
+ 
     # return predicted_output
-    return ["hello", "hi", "gaurav"]
+    return text_list
 
 
 if __name__ == "__main__":

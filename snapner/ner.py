@@ -1,2 +1,2 @@
-def generate_tags(words):
-    return ["Operating", "System", "Hello", "name"]
+def generate_tags(texts):
+    return texts

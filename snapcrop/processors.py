@@ -73,7 +73,7 @@ class RotationCorrector:
             image_edges, 1, math.pi / 90.0, 100, minLineLength = 100,
             MaxLineGap = 5
         )
-        print("NUmber of lines found:", len(lines))
+        print("Number of lines found:", len(lines))
 
         def get_angle(line):
             x1, y1, x2, y2 = line[0]
@@ -81,7 +81,7 @@ class RotationCorrector:
         
         median_angle = np.median(np.array([get_angle(line) for line in lines]))
         image_rotated = ndimage.rotate(
-            image_before, median_angle, cavl = 255,reshape = False
+            image_before, median_angle, cavl = 255, reshape = False
         )
 
         print("Angle is {}".format(median_angle))
@@ -114,7 +114,7 @@ class OtsuThresholder:
     
     def __call__(self, image):
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        T_, thresholded = cv2.threshold(image, self.thresh1, self.thresh2, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        T_, thresholded = cv2.threshold(image, self.thresh1, self.thresh2, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
         if self.output_process: cv2.imwrite('output/thresholded.jpg', thresholded)
         return thresholded
 

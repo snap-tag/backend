@@ -6,6 +6,8 @@ from sklearn.cluster import KMeans
 from itertools import combinations
 from collections import defaultdict
 
+from snapcrop.processors import RotationCorrector
+
 
 class PageExtractor:
     def __init__(self, preprocessors, corner_detector, output_process = False):
@@ -89,7 +91,7 @@ class PageExtractor:
         Returns
         rect    The ordered set of points
         """
-        # initialzie a list of coordinates that will be ordered such that 
+        # initialzie a list of coordinates that will be ordered such that
         # 1st point -> Top left
         # 2nd point -> Top right
         # 3rd point -> Bottom right
@@ -130,9 +132,10 @@ if __name__ == "__main__":
 
     page_extractor = PageExtractor(
         preprocessors = [
-            Resizer(height = 1280, output_process = True), 
-            FastDenoiser(strength = 9, output_process = True),
-            OtsuThresholder(output_process = True)
+            Resizer(height = 1280, output_process = True),
+            RotationCorrector(output_process = True),
+            OtsuThresholder(output_process = True),
+            FastDenoiser(strength = 9, output_process = True)
         ],
         corner_detector = HoughLineCornerDetector(
             rho_acc = 1,
