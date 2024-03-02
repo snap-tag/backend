@@ -51,7 +51,7 @@ def recognize(image):
     '''
     model = CNNModel(num_classes=62)
     model = model.to(device)
-    model.load_state_dict(torch.load("snapocr/model.pth",map_location=torch.device("mps")))
+    model.load_state_dict(torch.load("snapocr/model.pth",map_location=device))
     model.eval()
 
     text_list = []
@@ -67,7 +67,7 @@ def recognize(image):
                     char_list.append(recognized_character["predicted_class"])
             word_list.append("".join(char_list))
         text_list.append("".join(word_list))
- 
+
     # return predicted_output
     return text_list
 

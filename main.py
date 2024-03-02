@@ -7,9 +7,12 @@ from snapcrop.page_extractor import PageExtractor
 from snapcrop.processors import FastDenoiser, OtsuThresholder, Resizer
 from snapner.ner import generate_tags
 from snapocr.predict import recognize
+from snapbase.database import Database
 
 
 app = FastAPI()
+
+database = Database()
 
 
 page_extractor = PageExtractor(
@@ -47,4 +50,53 @@ async def snapservice(image_file: UploadFile):
         # Convert extracted tags to list of words
         return {"cropped_document": cropped_document_data, "extracted_tags": extracted_tags}
         
+    return {"error": "File not supported"}
+
+@app.get("/recentNotes")
+async def recent_notes():
+    recent_images = database.get_recent_images()
+    recent_images_list = []
+    for image in recent_images:
+        image_dict = {
+            "image_id": image[0],
+            "image_path": image[1]
+        }
+        recent_images_list.append(image_dict)
+    return recent_images_list
+
+@app.get("/favoriteNotes")
+async def favorite_notes():
+    favorite_images = database.get_favorite_images()
+    favorite_images_list = []
+    for image in favorite_images:
+        image_dict = {
+            "image_id": image[0],
+            "image_path": image[1]
+        }
+        favorite_images_list.append(image_dict)
+    return favorite_images_list
+
+@app.get("/searchNotes")
+async def search_notes(tag: str):
+    tags = tag.split(" ")
+    searched_images = []
+    for tag in tags:
+        images = database.get_images(tag)
+        for image in images:
+            if image in searched_images:
+                continue
+            image_dict = {
+                "image_id": image[0],
+                "image_path": image[1]
+            }
+            searched_images.append(image_dict)
+    return searched_images
+
+@app.post("/uploadNote")
+async def upload_note(image_file: UploadFile, tags: str):
+    if image_file.filename.endswith(".jpg") or image_file.filename.endswith(".png") or image_file.filename.endswith(".jpeg"):
+        img = Image.open(image_file.file)
+        image_data = img.tobytes()
+        image_id = database.insert_image(image_data, tags.split(" "))
+        return {"image_id": image_id}
     return {"error": "File not supported"}
