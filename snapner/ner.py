@@ -1,2 +1,2 @@
-def generate_tags(texts):
+def generate_tags(texts: str):
     return texts

@@ -8,6 +8,9 @@ from snapcrop.processors import FastDenoiser, OtsuThresholder, Resizer
 from snapner.ner import generate_tags
 from snapocr.predict import recognize
 from snapbase.database import Database
+from fastapi import Form
+import os
+from datetime import datetime
 
 
 app = FastAPI()
@@ -57,9 +60,13 @@ async def recent_notes():
     recent_images = database.get_recent_images()
     recent_images_list = []
     for image in recent_images:
+        image_data = Image.open(image[1])
+        buffer = io.BytesIO()
+        image_data.save(buffer, format="PNG")
+        base64_image = base64.b64encode(buffer.getvalue()).decode("utf-8")
         image_dict = {
             "image_id": image[0],
-            "image_path": image[1]
+            "image_path": base64_image
         }
         recent_images_list.append(image_dict)
     return recent_images_list
@@ -69,9 +76,13 @@ async def favorite_notes():
     favorite_images = database.get_favorite_images()
     favorite_images_list = []
     for image in favorite_images:
+        image_data = Image.open(image[1])
+        buffer = io.BytesIO()
+        image_data.save(buffer, format="PNG")
+        base64_image = base64.b64encode(buffer.getvalue()).decode("utf-8")
         image_dict = {
             "image_id": image[0],
-            "image_path": image[1]
+            "image_path": base64_image
         }
         favorite_images_list.append(image_dict)
     return favorite_images_list
@@ -85,18 +96,45 @@ async def search_notes(tag: str):
         for image in images:
             if image in searched_images:
                 continue
+            image_data = Image.open(image[1])
+            buffer = io.BytesIO()
+            image_data.save(buffer, format="PNG")
+            base64_image = base64.b64encode(buffer.getvalue()).decode("utf-8")
             image_dict = {
                 "image_id": image[0],
-                "image_path": image[1]
+                "image_path": base64_image
             }
             searched_images.append(image_dict)
     return searched_images
 
 @app.post("/uploadNote")
-async def upload_note(image_file: UploadFile, tags: str):
+async def upload_note(image_file: UploadFile = Form(), tags: str = Form()):
     if image_file.filename.endswith(".jpg") or image_file.filename.endswith(".png") or image_file.filename.endswith(".jpeg"):
         img = Image.open(image_file.file)
-        image_data = img.tobytes()
-        image_id = database.insert_image(image_data, tags.split(" "))
+  
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        filename = f"{timestamp}_{image_file.filename}"
+        filepath = os.path.join("notes", filename)
+
+        img.save(filepath)
+
+        image_id = database.insert_image(filepath, tags.split(" "))
+
         return {"image_id": image_id}
     return {"error": "File not supported"}
+
+@app.post("/deleteNote")
+async def delete_note(image_id: int = Form()):
+    database.delete_image(image_id)
+    return {"message": "Note deleted"}
+
+@app.post("/flushTables")
+async def drop_tables():
+    database.drop_tables()
+    database.create_tables()
+    return {"message": "Tables dropped"}
+
+@app.post("/setFavorite")
+async def set_favorite(image_id: int = Form()):
+    database.set_favorite(image_id)
+    return {"message": "Favorite set"}

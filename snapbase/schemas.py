@@ -7,7 +7,7 @@ ImageTags: image_id, tag_id
 '''
 
 IMAGES_SCHEMA = '''
-CREATE TABLE images (
+CREATE TABLE IF NOT EXISTS images (
     image_id INT AUTO_INCREMENT PRIMARY KEY,
     image_path VARCHAR(255),
     favorite BOOLEAN DEFAULT FALSE,
@@ -17,17 +17,17 @@ CREATE TABLE images (
 '''
 
 TAGS_SCHEMA = '''
-CREATE TABLE tags (
+CREATE TABLE IF NOT EXISTS tags (
     tag_id INT AUTO_INCREMENT PRIMARY KEY,
     tag_name VARCHAR(255)
 )
 '''
 
 IMAGE_TAG_SCHEMA = '''
-CREATE TABLE image_tags (
+CREATE TABLE IF NOT EXISTS image_tags (
     image_id INT,
     tag_id INT,
-    FOREIGN KEY (image_id) REFERENCES images(image_id),
-    FOREIGN KEY (tag_id) REFERENCES tags(tag_id)
+    FOREIGN KEY (image_id) REFERENCES images(image_id) ON DELETE CASCADE,
+    FOREIGN KEY (tag_id) REFERENCES tags(tag_id) ON DELETE CASCADE
 )
 '''

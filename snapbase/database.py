@@ -1,5 +1,5 @@
 import mysql.connector as mysql
-import schemas
+import snapbase.schemas as schemas
 
 class Database:
     def __init__(self):
@@ -8,7 +8,9 @@ class Database:
             user="root",
             password="root"
         )
-        print("Connected to the database!")
+
+        if self.db.is_connected():
+            print("Connected to the database!")
 
         self.mycursor = self.db.cursor()
         self.mycursor.execute("CREATE DATABASE IF NOT EXISTS snaptag_db")
@@ -41,7 +43,7 @@ class Database:
         return image_id
     
     def get_images(self, tag):
-        self.mycursor.execute("SELECT image_id, image_path FROM images JOIN image_tags ON images.image_id = image_tags.image_id JOIN tags ON tags.tag_id = image_tags.tag_id WHERE tags.tag_name = %s", (tag,))
+        self.mycursor.execute("SELECT images.image_id, images.image_path FROM images JOIN image_tags ON images.image_id = image_tags.image_id JOIN tags ON tags.tag_id = image_tags.tag_id WHERE tags.tag_name = %s", (tag,))
         images_list = self.mycursor.fetchall()
         print(images_list)
         return images_list
@@ -55,3 +57,25 @@ class Database:
         self.mycursor.execute("SELECT image_id, image_path FROM images WHERE favorite = TRUE")
         images_list = self.mycursor.fetchall()
         return images_list
+    
+    def delete_image(self, image_id):
+        self.mycursor.execute("DELETE FROM images WHERE image_id = %s", (image_id,))
+        self.db.commit()
+        print("Done deleting an image")
+    
+    def drop_tables(self):
+        self.mycursor.execute("DROP TABLE image_tags")
+        self.mycursor.execute("DROP TABLE images")
+        self.mycursor.execute("DROP TABLE tags")
+        print("Done dropping tables")
+    
+    def create_tables(self):
+        self.mycursor.execute(schemas.IMAGES_SCHEMA)
+        self.mycursor.execute(schemas.TAGS_SCHEMA)
+        self.mycursor.execute(schemas.IMAGE_TAG_SCHEMA)
+        print("Done creating tables")
+    
+    def set_favorite(self, image_id):
+        self.mycursor.execute("UPDATE images SET favorite = TRUE WHERE image_id = %s", (image_id,))
+        self.db.commit()
+        print("Done setting favorite")
