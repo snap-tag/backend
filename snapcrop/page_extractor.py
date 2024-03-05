@@ -6,7 +6,7 @@ from sklearn.cluster import KMeans
 from itertools import combinations
 from collections import defaultdict
 
-from snapcrop.processors import RotationCorrector
+from snapcrop.processors import RotationCorrector, OtsuThresholder
 
 
 class PageExtractor:
@@ -74,7 +74,11 @@ class PageExtractor:
         M = cv2.getPerspectiveTransform(rect, dst)
         warped = cv2.warpPerspective(self._processed, M, (maxWidth, maxHeight))
 
-        if self.output_process: cv2.imwrite('output/deskewed.jpg', warped)
+        # warped = OtsuThresholder()(warped)
+        warped = cv2.cvtColor(warped, cv2.COLOR_BGR2GRAY)
+
+        cv2.imwrite('output/deskewed.jpg', warped)
+        
 
         # return the warped image
         return warped

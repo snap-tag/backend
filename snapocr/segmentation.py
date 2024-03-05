@@ -7,6 +7,7 @@ character_kernel = cv2.getStructuringElement(cv2.MORPH_CROSS, (1, 2))
 def segment_text(image):
     segmented_image_list = []
 
+    # Binarize the image using Otsu's thresholding
     _, binarized_image = cv2.threshold(image,thresh=0,maxval=255,type=cv2.THRESH_OTSU | cv2.THRESH_BINARY_INV)
     
     # Dilate the image to connect nearby characters into lines

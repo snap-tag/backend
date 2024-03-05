@@ -2,7 +2,7 @@ from math import sin, cos, atan
 import cv2
 import numpy as np
 from matplotlib import pyplot as plt
-from .processors import Opener, Closer, EdgeDetector
+from .processors import Opener, Closer, EdgeDetector, OtsuThresholder
 from sklearn.cluster import KMeans
 from itertools import combinations
 
@@ -19,8 +19,10 @@ class HoughLineCornerDetector:
         ]
     
     def __call__(self, image):
-        # Step 1: Process for edge detection
-        self._image = image
+        # Step 1: Process for edge detection'
+
+        self._image = OtsuThresholder(output_process=True)(image)
+
         for processor in self._preprocessor:
             self._image = processor(self._image)
         
