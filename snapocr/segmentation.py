@@ -61,7 +61,7 @@ def segment_text(image):
             for character_cnt in character_sorted_contours:
                 cx, cy, cw, ch = cv2.boundingRect(character_cnt)
                 # Extract the character from the word
-                character = word[cy:cy+ch+4, cx:cx+cw+4]
+                character = word[cy:cy+ch, cx:cx+cw]
                 # Add character image to the list
                 character_images.append(character)
             

@@ -1,4 +1,5 @@
-from math import sin, cos, atan
+import math
+from math import atan
 import cv2
 import numpy as np
 from matplotlib import pyplot as plt
@@ -19,19 +20,19 @@ class HoughLineCornerDetector:
         ]
     
     def __call__(self, image):
-        # Step 1: Process for edge detection'
-
-        self._image = OtsuThresholder(output_process=True)(image)
-
+        
+        self._image = image
         for processor in self._preprocessor:
             self._image = processor(self._image)
         
         # Step 2: Get hough lines
         self._lines = self._get_hough_lines()
 
+
         # Step 3: Get intersection points
         self._intersections = self._get_intersections()
 
+        
         # Step 4: Get Quadrilaterals
         return self._find_quadrilaterals()
 
@@ -95,19 +96,60 @@ class HoughLineCornerDetector:
 
 
     def _find_quadrilaterals(self):
-        X = np.array([[point[0][0], point[0][1]] for point in self._intersections])
-        kmeans = KMeans(
-            n_clusters = 4,
-            init = 'k-means++',
-            max_iter = 100,
-            n_init = 10,
-            random_state = 0
-        ).fit(X)
+        try:
+            X = np.array([[point[0][0], point[0][1]] for point in self._intersections])
 
-        if self.output_process: self._draw_quadrilaterals(self._lines, kmeans)
+            kmeans = KMeans(
+                n_clusters=4,
+                init='k-means++',
+                max_iter=100,
+                n_init=10,
+                random_state=0
+            ).fit(X)
 
-        centers = [[center.tolist()] for center in kmeans.cluster_centers_]
-        return  centers
+            if self.output_process: 
+                self._draw_quadrilaterals(self._lines, kmeans)
+            
+            centers = kmeans.cluster_centers_
+            # Check if the detected quadrilateral is valid for a paper
+            if self._is_valid_paper(centers):
+                return [centers.tolist()]
+            else:
+                return [[(0, 0), (self._image.shape[1], 0), (0, self._image.shape[0]), (self._image.shape[1], self._image.shape[0])]]
+                
+        except Exception as e:
+            print(f"Exception Occured at _find_quadrilaters: {e}")
+            return [[(0, 0), (self._image.shape[1], 0), (0, self._image.shape[0]), (self._image.shape[1], self._image.shape[0])]]
+
+    def _is_valid_paper(self, points):
+        # Check if the quadrilateral has reasonable aspect ratio and angles
+        if len(points) != 4:
+            return False
+
+        # Check aspect ratio
+        x_values = [point[0] for point in points]
+        y_values = [point[1] for point in points]
+        width = max(x_values) - min(x_values)
+        height = max(y_values) - min(y_values)
+        aspect_ratio = width / height
+        if aspect_ratio < 0.5 or aspect_ratio > 2:  # Adjust these values as needed
+            return False
+        
+        # Check angles
+        angles = []
+        for i in range(4):
+            # Calculate angle using dot product
+            try:
+                v1 = np.array(points[i - 1]) - np.array(points[i])
+                v2 = np.array(points[i + 1] if i < 3 else points[0]) - np.array(points[i])
+                angle = math.acos(np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2)))
+                angles.append(math.degrees(angle))
+            except Exception as e:
+                print(f"Exception:{e}")
+        
+        return True
+
+
 
 
     def _draw_quadrilaterals(self, lines, kmeans):

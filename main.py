@@ -1,10 +1,10 @@
 import io
 import base64
 from fastapi import FastAPI, UploadFile
-from PIL import Image, UnidentifiedImageError
+from PIL import Image
 from snapcrop.hough_line_corner_detector import HoughLineCornerDetector
 from snapcrop.page_extractor import PageExtractor
-from snapcrop.processors import FastDenoiser, OtsuThresholder, Resizer
+from snapcrop.processors import FastDenoiser, OtsuThresholder, Resizer, RotationCorrector
 from snapner.ner import generate_tags
 from snapocr.predict import recognize
 from snapbase.database import Database
@@ -22,9 +22,10 @@ nlp = spacy.load("en_core_web_sm")
 
 page_extractor = PageExtractor(
         preprocessors = [
-            # OtsuThresholder(output_process = True),
-            Resizer(height = 1440, output_process = True), 
+            Resizer(height = 2160, output_process = True), 
+            RotationCorrector(),
             FastDenoiser(strength = 5, output_process = True),
+            OtsuThresholder(output_process = True),
         ],
         corner_detector = HoughLineCornerDetector(
             rho_acc = 1,
@@ -68,7 +69,8 @@ async def recent_notes():
         base64_image = base64.b64encode(buffer.getvalue()).decode("utf-8")
         image_dict = {
             "image_id": image[0],
-            "image_data": base64_image
+            "image_data": base64_image,
+            "favorite": image[2]
         }
         recent_images_list.append(image_dict)
     return recent_images_list
@@ -84,7 +86,8 @@ async def favorite_notes():
         base64_image = base64.b64encode(buffer.getvalue()).decode("utf-8")
         image_dict = {
             "image_id": image[0],
-            "image_data": base64_image
+            "image_data": base64_image,
+            "favorite": image[2]
         }
         favorite_images_list.append(image_dict)
     return favorite_images_list
@@ -104,7 +107,8 @@ async def search_notes(tag: str):
             base64_image = base64.b64encode(buffer.getvalue()).decode("utf-8")
             image_dict = {
                 "image_id": image[0],
-                "image_data": base64_image
+                "image_data": base64_image,
+                "favorite": image[2]
             }
             searched_images.append(image_dict)
     return searched_images
@@ -140,6 +144,6 @@ async def drop_tables():
     return {"message": "Tables dropped"}
 
 @app.post("/setFavorite")
-async def set_favorite(image_id: int = Form()):
-    database.set_favorite(image_id)
-    return {"message": "Favorite set"}
+async def set_favorite(image_id: int = Form(), fav_val: bool = Form()):
+    database.set_favorite(fav_val=fav_val, image_id=image_id)
+    return {"message": "Favorite Changed"}

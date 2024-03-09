@@ -15,10 +15,13 @@ def generate_tags(nlp, texts: str):
                 corrected_text.append(str(corrected_word))
         except ValueError:
             continue
+    
+    corrected_list = [word for word in corrected_text if len(word) > 1]
     corrected_text = ' '.join(corrected_text)
+    
    
     # doc = nlp(corrected_text)
 
     # entities = [ent.text for ent in doc.ents]
 
-    return entities if entities is not None else corrected_text.split(" ")
+    return entities if entities is not None else corrected_list

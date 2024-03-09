@@ -43,18 +43,18 @@ class Database:
         return image_id
     
     def get_images(self, tag):
-        self.mycursor.execute("SELECT images.image_id, images.image_path FROM images JOIN image_tags ON images.image_id = image_tags.image_id JOIN tags ON tags.tag_id = image_tags.tag_id WHERE tags.tag_name = %s", (tag,))
+        self.mycursor.execute("SELECT images.image_id, images.image_path, images.favorite FROM images JOIN image_tags ON images.image_id = image_tags.image_id JOIN tags ON tags.tag_id = image_tags.tag_id WHERE tags.tag_name = %s", (tag,))
         images_list = self.mycursor.fetchall()
         print(images_list)
         return images_list
 
     def get_recent_images(self):
-        self.mycursor.execute("SELECT image_id, image_path FROM images ORDER BY created_at DESC LIMIT 5")
+        self.mycursor.execute("SELECT image_id, image_path, favorite FROM images ORDER BY created_at DESC LIMIT 5")
         images_list = self.mycursor.fetchall()
         return images_list
 
     def get_favorite_images(self):
-        self.mycursor.execute("SELECT image_id, image_path FROM images WHERE favorite = TRUE")
+        self.mycursor.execute("SELECT image_id, image_path, favorite FROM images WHERE favorite = TRUE")
         images_list = self.mycursor.fetchall()
         return images_list
     
@@ -75,7 +75,10 @@ class Database:
         self.mycursor.execute(schemas.IMAGE_TAG_SCHEMA)
         print("Done creating tables")
     
-    def set_favorite(self, image_id):
-        self.mycursor.execute("UPDATE images SET favorite = TRUE WHERE image_id = %s", (image_id,))
+    def set_favorite(self, fav_val, image_id):
+        if fav_val:
+            self.mycursor.execute("UPDATE images SET favorite = TRUE WHERE image_id = %s", (image_id,))
+        else:
+            self.mycursor.execute("UPDATE images SET favorite = FALSE WHERE image_id = %s", (image_id,))
         self.db.commit()
         print("Done setting favorite")

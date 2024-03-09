@@ -74,9 +74,6 @@ class PageExtractor:
         M = cv2.getPerspectiveTransform(rect, dst)
         warped = cv2.warpPerspective(self._processed, M, (maxWidth, maxHeight))
 
-        # warped = OtsuThresholder()(warped)
-        warped = cv2.cvtColor(warped, cv2.COLOR_BGR2GRAY)
-
         cv2.imwrite('output/deskewed.jpg', warped)
         
 
@@ -137,7 +134,7 @@ if __name__ == "__main__":
     page_extractor = PageExtractor(
         preprocessors = [
             Resizer(height = 1280, output_process = True),
-            RotationCorrector(output_process = True),
+            # RotationCorrector(output_process = True),
             OtsuThresholder(output_process = True),
             FastDenoiser(strength = 9, output_process = True)
         ],

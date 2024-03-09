@@ -5,7 +5,7 @@ import numpy as np
 
 
 class Closer:
-    def __init__(self, kernel_size = 3, iterations = 10, output_process = False):
+    def __init__(self, kernel_size = 4, iterations = 10, output_process = False):
         self._kernel_size = kernel_size
         self._iterations = iterations
         self.output_process = output_process
@@ -69,9 +69,9 @@ class RotationCorrector:
         image_before = image.copy()
 
         image_edges = cv2.Canny(image_before, 50, 150, apertureSize=3)
-        lines = cv2.HoughLinesp(
+        lines = cv2.HoughLinesP(
             image_edges, 1, math.pi / 90.0, 100, minLineLength = 100,
-            MaxLineGap = 5
+            maxLineGap = 5
         )
         print("Number of lines found:", len(lines))
 
@@ -81,7 +81,7 @@ class RotationCorrector:
         
         median_angle = np.median(np.array([get_angle(line) for line in lines]))
         image_rotated = ndimage.rotate(
-            image_before, median_angle, cavl = 255, reshape = False
+            image_before, median_angle, cval = 255, reshape = False
         )
 
         print("Angle is {}".format(median_angle))
@@ -107,7 +107,7 @@ class Resizer:
 
 class OtsuThresholder:
     
-    def __init__(self, thresh1 = 100, thresh2 = 150, output_process = False):
+    def __init__(self, thresh1 = 0, thresh2 = 250, output_process = False):
         self.output_process = output_process
         self.thresh1 = thresh1
         self.thresh2 = thresh2
